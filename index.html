@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CSS object-view-box demo</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #faf6ee;
+        --ink: #35271f;
+        --muted: #837467;
+        --line: #ded4c5;
+        --chocolate: #3d2b22;
+        --accent: #965334;
+        --gutter: max(28px, calc((100vw - 1160px) / 2));
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Georgia, 'Times New Roman', serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; -webkit-font-smoothing: antialiased; }
+      button, input { font: inherit; }
+      button { cursor: pointer; }
+      button:focus-visible, [tabindex]:focus-visible, input:focus-visible {
+        outline: 2px solid var(--accent); outline-offset: 5px;
+      }
+      .banner { margin: 0; background: var(--chocolate); overflow: hidden; }
+      .banner img {
+        display: block; width: 100%; height: clamp(190px, 23vw, 320px);
+        object-fit: cover; object-position: center 58%;
+        object-view-box: inset(0 35% 0 0);
+        transition: object-view-box 8s ease-in-out;
+      }
+      .banner img.at-right { object-view-box: inset(0 0 0 35%); }
+      .code-strip {
+        padding: 32px var(--gutter); background: var(--chocolate); color: #fffaf1;
+        display: flex; align-items: center; justify-content: space-between; gap: 40px;
+        border-bottom: 5px solid #b98d63;
+      }
+      .brand { flex: 1; padding-top: 16px; }
+      .eyebrow, .section-number {
+        display: block; font: 10px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        letter-spacing: .18em; text-transform: uppercase;
+      }
+      .eyebrow { color: #cbb198; margin-bottom: 12px; }
+      .bakery-title { margin: 0; color: #fffaf1; font-size: clamp(40px, 5.5vw, 72px); font-weight: normal; letter-spacing: -.055em; line-height: 1.05; }
+      .brand-note { margin: 16px 0 0; font-size: 15px; font-style: italic; color: #d1bdab; }
+      .code-example {
+        width: min(420px, 100%); max-width: 420px; margin: 0 0 0 auto;
+        overflow: hidden; border: 1px solid #80614e; border-radius: 7px;
+        background: #624a3b; color: #fff2df;
+      }
+      .code-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 12px; background: #705441; border-bottom: 1px solid #80614e; }
+      .code-example h2 { margin: 0; font: 10px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #f0dac2; }
+      .copy-code { border: 1px solid #9b7a61; border-radius: 4px; padding: 4px 8px; background: #806149; color: #fff3e1; font: 10px/1.3 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .copy-code:hover { background: #947357; }
+      pre { margin: 0; padding: 13px 15px; overflow-x: auto; color: #fff2df; font: 11.5px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+      .editable-crop {
+        display: inline-block; min-width: 9ch; padding: 2px 5px;
+        background: #806149; border-radius: 3px;
+        border-bottom: 1px dashed #d2b89e; outline-offset: 3px;
+      }
+      .editable-crop:focus { outline: 1px solid #fff2df; }
+      .editable-crop[aria-invalid="true"] { border-color: #ffbc9f; }
+      .edit-note { margin: 10px 0 0; font: 12px/1.7 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--muted); }
+      .crop-error { margin: 6px 0 0; font: 12px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #9c3e25; }
+      .crop-error:empty { display: none; }
+      .comment { color: #d2b89e; }
+      .code-strip > .code-example { width: min(420px, 48%); max-width: 420px; flex-shrink: 0; }
+      .code-strip pre { font-size: 10.5px; line-height: 1.5; }
+      .collection-heading { padding: 44px var(--gutter) 22px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+      .collection-heading h2 { font-size: 28px; font-weight: normal; margin: 0; letter-spacing: -.035em; }
+      .collection-heading p { margin: 0; font: 14px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--muted); }
+      .products { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; padding: 0 var(--gutter) 56px; }
+      .product-demo { min-width: 0; }
+      .product-card { overflow: hidden; border: 1px solid var(--line); border-radius: 9px; background: #fffcf6; }
+      .product-card img { display: block; width: 100%; aspect-ratio: 1.1; object-fit: cover; object-view-box: inset(0); transition: object-view-box 600ms ease; }
+      .product-card h2 { margin: 0; padding: 18px; font-size: 23px; font-weight: normal; letter-spacing: -.025em; }
+      .product-card h2::after { content: '↗'; float: right; font-size: 17px; color: #ad8c6d; }
+      .croissants:hover img, .croissants:focus-visible img { object-view-box: inset(10% 18% 42% 48%); }
+      .cupcakes:hover img, .cupcakes:focus-visible img { object-view-box: inset(36% 18% 14% 40%); }
+      .lime-tarts:hover img, .lime-tarts:focus-visible img { object-view-box: inset(20% 26% 43% 25%); }
+      .product-demo .code-example { width: 100%; margin-top: 12px; }
+      .crop-playground, .effect-section { margin: 0 var(--gutter); padding: 40px 0 48px; border-top: 1px solid var(--line); }
+      .crop-playground { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: 0 40px; align-items: start; }
+      .crop-playground > h2, .effect-section > h2 { margin: 0 0 12px; font-size: clamp(28px, 3vw, 38px); font-weight: normal; letter-spacing: -.035em; line-height: 1.15; }
+      .crop-playground > h2 { grid-column: 1 / -1; margin-bottom: 24px; }
+      .section-number { color: var(--accent); margin-bottom: 10px; }
+      .crop-description, .effect-section > p { font: 15px/1.8 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--muted); max-width: none; margin: 0 0 24px; }
+      .crop-description { grid-column: 1 / -1; margin-top: -12px; }
+      .crop-playground > img, .crop-playground > video { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; object-view-box: inset(0%); border-radius: 9px; background: #e6d8c7; }
+      #cake-preview { object-fit: contain; background: #eee5d9; }
+      .crop-playground > video { aspect-ratio: 16 / 9; }
+      .crop-sidebar, .focus-sidebar { min-width: 0; padding-top: 2px; }
+      .crop-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 12px; margin: 0; }
+      .crop-presets { display: flex; gap: 6px; width: 100%; padding: 5px; border-radius: 7px; border: 1px solid var(--line); background: #f0e9df; }
+      .crop-presets button { flex: 1; padding: 10px; border: 0; border-radius: 4px; background: transparent; color: #7b6959; font: 14px/1.2 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .crop-presets button:hover { background: #e6dbcd; }
+      .crop-presets button[aria-pressed="true"] { background: var(--chocolate); color: #fffaf1; box-shadow: 0 2px 4px #35271f15; }
+      .crop-controls label { width: 100%; margin-top: 8px; font: 11px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; letter-spacing: .04em; color: #79695a; }
+      .crop-controls input { flex: 1; min-width: 0; width: 160px; accent-color: var(--accent); cursor: pointer; }
+      .crop-controls input.is-custom { accent-color: #aaa39a; opacity: .55; }
+      .crop-controls output { flex: 0 0 76px; width: 76px; min-width: 76px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 4px; text-align: center; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: #71543e; background: #fffdf6; }
+      .crop-playground .code-example, .focus-sidebar .code-example { width: 100%; margin: 24px 0 0; }
+      .magnifier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+      .magnifier-source { position: relative; touch-action: none; cursor: crosshair; overflow: hidden; border-radius: 9px; }
+      .magnifier-grid img, .focus-layout img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 9px; }
+      .crop-marker { position: absolute; width: 40%; height: 40%; left: 30%; top: 30%; border: 2px solid #fff7de; box-shadow: 0 0 0 1px #422b2050, 0 0 0 1000px #35271f15; pointer-events: none; border-radius: 3px; }
+      #brownie-detail { object-view-box: inset(30%); }
+      .effect-section > .code-example { margin-top: 18px; }
+      .focus-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); align-items: start; gap: 40px; }
+      #cookie-focus { object-view-box: inset(0%); transition: object-view-box 700ms ease-in-out; }
+      .focus-options { display: grid; gap: 8px; }
+      .focus-options button { text-align: left; padding: 14px 16px; border: 1px solid var(--line); border-radius: 5px; background: #fffcf6; color: #715846; font: 16px/1.25 Georgia, serif; }
+      .focus-options button::after { content: '↗'; float: right; opacity: .55; }
+      .focus-options button:hover { border-color: #b39478; }
+      .focus-options button[aria-pressed="true"] { background: var(--chocolate); color: #fffaf1; border-color: var(--chocolate); }
+      .page-footer { margin: 0 var(--gutter); border-top: 1px solid var(--line); padding: 24px 0 32px; display: flex; justify-content: space-between; gap: 20px; color: var(--muted); font: 11px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .page-footer a { color: #72543d; text-underline-offset: 4px; }
+      .page-footer a:hover { color: var(--accent); }
+      .page-footer span:first-child { font: italic 17px Georgia, serif; color: #72543d; }
+      @media (max-width: 820px) {
+        :root { --gutter: 24px; }
+        .code-strip { gap: 24px; flex-wrap: wrap; }
+        .code-strip > .code-example { margin-left: 0; width: min(420px, 100%); }
+        .products { gap: 16px; }
+        .product-card h2 { font-size: 19px; padding: 14px; }
+        .crop-playground, .focus-layout { grid-template-columns: minmax(0, 1fr) minmax(260px, 1fr); gap: 0 24px; }
+      }
+      @media (max-width: 620px) {
+        :root { --gutter: 20px; }
+        .products, .crop-playground, .focus-layout, .magnifier-grid { grid-template-columns: 1fr; }
+        .products { gap: 28px; }
+        .collection-heading { align-items: start; flex-direction: column; gap: 8px; }
+        .crop-sidebar, .focus-sidebar { padding-top: 20px; }
+        .code-strip > .code-example { width: 100%; max-width: none; }
+        .brand { flex-basis: 100%; }
+        .crop-playground, .effect-section { padding-top: 30px; padding-bottom: 36px; }
+        .magnifier-grid { gap: 16px; }
+        .page-footer { flex-direction: column; gap: 8px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .banner img, .product-card img, #cookie-focus { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <figure class="banner">
+        <img id="baking-banner" src="assets/baking-banner.avif"
+          alt="An overhead spread of cakes, cookies, cupcakes, and pastries on a wooden table."
+          fetchpriority="high">
+      </figure>
+
+      <div class="code-strip">
+        <div class="brand">
+          <span class="eyebrow">A little flour. A little CSS.</span>
+          <h1 class="bakery-title">Alice’s Bakery</h1>
+          <p class="brand-note">A demonstration of CSS object-view-box.</p>
+        </div>
+      <section class="code-example" aria-labelledby="code-title">
+        <div class="code-toolbar">
+          <h2 id="code-title">CSS · Sliding banner</h2>
+          <button class="copy-code" type="button" aria-label="Copy CSS code">Copy</button>
+        </div>
+        <pre><code><span class="comment">/* Two crops */</span>
+.banner img          { object-view-box: inset(0 35% 0 0); }
+.banner img.at-right { object-view-box: inset(0 0 0 35%); }
+
+<span class="comment">/* One transition */</span>
+.banner img { transition: object-view-box 8s ease-in-out; }</code></pre>
+      </section>
+      </div>
+      <div class="collection-heading">
+        <h2>Fresh from the counter</h2>
+        <p>Hover over a product card for a closer look.</p>
+      </div>
+      <section class="products" aria-label="Bakery products">
+        <div class="product-demo">
+          <article class="product-card croissants" tabindex="0" aria-label="Butter Croissants. Hover or focus to zoom in.">
+            <h2>Butter Croissants</h2>
+            <img src="assets/butter-croissants.jpg" alt="Golden croissants with coffee and jam.">
+          </article>
+          <section class="code-example" aria-label="Butter Croissants CSS example">
+            <div class="code-toolbar">
+              <h2>CSS · Flaky layers</h2>
+              <button class="copy-code" type="button" aria-label="Copy Butter Croissants CSS">Copy</button>
+            </div>
+            <pre><code>.croissants:hover img {
+  object-view-box: inset(10% 18% 42% 48%);
+}</code></pre>
+          </section>
+        </div>
+        <div class="product-demo">
+          <article class="product-card cupcakes" tabindex="0" aria-label="Chocolate Cupcakes. Hover or focus to zoom in.">
+            <h2>Chocolate Cupcakes</h2>
+            <img src="assets/chocolate-cupcakes.webp" alt="Chocolate cupcakes topped with swirls of chocolate frosting.">
+          </article>
+          <section class="code-example" aria-label="Chocolate Cupcakes CSS example">
+            <div class="code-toolbar">
+              <h2>CSS · Chocolate frosting</h2>
+              <button class="copy-code" type="button" aria-label="Copy Chocolate Cupcakes CSS">Copy</button>
+            </div>
+            <pre><code>.cupcakes:hover img {
+  object-view-box: inset(36% 18% 14% 40%);
+}</code></pre>
+          </section>
+        </div>
+        <div class="product-demo">
+          <article class="product-card lime-tarts" tabindex="0" aria-label="Key Lime Tarts. Hover or focus to zoom in.">
+            <h2>Key Lime Tarts</h2>
+            <img src="assets/key-lime-tarts.jpg" alt="Lime tarts topped with cream, crumbs, and slices of lime.">
+          </article>
+          <section class="code-example" aria-label="Key Lime Tarts CSS example">
+            <div class="code-toolbar">
+              <h2>CSS · Lime & cream</h2>
+              <button class="copy-code" type="button" aria-label="Copy Key Lime Tarts CSS">Copy</button>
+            </div>
+            <pre><code>.lime-tarts:hover img {
+  object-view-box: inset(20% 26% 43% 25%);
+}</code></pre>
+          </section>
+        </div>
+      </section>
+
+      <section class="crop-playground" aria-labelledby="crop-title">
+        <h2 id="crop-title"><span class="section-number">01 / The crop studio</span>A closer look</h2>
+        <p class="crop-description">Choose a crop or move the slider to zoom into the cake.</p>
+        <img id="cake-preview" src="assets/citrus-berry-cake.jpg" alt="A cream-covered cake topped with orange slices and berries.">
+        <div class="crop-sidebar">
+        <div class="crop-controls">
+          <div class="crop-presets" role="group" aria-label="Visible fraction of image width and height">
+            <button type="button" data-fraction="100" aria-pressed="true">Full</button>
+            <button type="button" data-fraction="50" aria-pressed="false">½</button>
+            <button type="button" data-fraction="33.333333" aria-pressed="false">⅓</button>
+            <button type="button" data-fraction="25" aria-pressed="false">¼</button>
+          </div>
+          <label for="crop-size">Visible width &amp; height</label>
+          <input id="crop-size" type="range" min="1" max="100" step="0.1" value="100">
+          <output id="crop-value" for="crop-size">100%</output>
+        </div>
+        <section class="code-example" aria-label="Current cake crop CSS">
+          <div class="code-toolbar">
+            <h2>CSS · Live crop</h2>
+            <button class="copy-code" type="button" aria-label="Copy current cake crop CSS">Copy</button>
+          </div>
+          <pre><code id="cake-css">object-view-box: <span id="cake-crop-input" class="editable-crop" contenteditable="plaintext-only" role="textbox" aria-label="Editable cake inset value" aria-describedby="cake-edit-note cake-edit-error" aria-invalid="false" spellcheck="false">inset(0%)</span>;</code></pre>
+        </section>
+        <p class="edit-note" id="cake-edit-note">Edit the field above to try your own crop values, e.g. <code>inset(10% 20% 30% 15%)</code>. Valid changes apply live.</p>
+        <p class="crop-error" id="cake-edit-error" role="status"></p>
+        </div>
+      </section>
+      <section class="crop-playground" aria-labelledby="video-title">
+        <h2 id="video-title"><span class="section-number">02 / In motion</span>Fresh from the oven, in motion</h2>
+        <p class="crop-description">Change the crop while the video plays to see object-view-box at work.</p>
+        <video id="video-preview" src="assets/cake-decorating.mp4" controls autoplay muted loop playsinline preload="auto" aria-label="Bakery video with an adjustable crop"></video>
+        <div class="crop-sidebar">
+        <div class="crop-controls">
+          <div class="crop-presets" role="group" aria-label="Video crop">
+            <button type="button" data-video-inset="0" aria-pressed="true">Full</button>
+            <button type="button" data-video-inset="25" aria-pressed="false">½</button>
+            <button type="button" data-video-inset="33.333" aria-pressed="false">⅓</button>
+            <button type="button" data-video-inset="37.5" aria-pressed="false">¼</button>
+          </div>
+          <label for="video-crop">Zoom</label>
+          <input id="video-crop" type="range" min="0" max="37.5" step="0.1" value="0">
+          <output id="video-zoom" for="video-crop">1×</output>
+        </div>
+        <section class="code-example" aria-label="Current video crop CSS">
+          <div class="code-toolbar">
+            <h2>CSS · Live video crop</h2>
+            <button class="copy-code" type="button" aria-label="Copy current video crop CSS">Copy</button>
+          </div>
+          <pre><code id="video-css">object-view-box: inset(0%);</code></pre>
+        </section>
+        </div>
+      </section>
+      <section class="effect-section" aria-labelledby="magnifier-title">
+        <h2 id="magnifier-title"><span class="section-number">03 / The finer details</span>Every fudgy detail</h2>
+        <p>Move your mouse across the brownies to magnify a detail, or click anywhere on the photo to focus it and use the arrow keys.</p>
+        <div class="magnifier-grid">
+          <div class="magnifier-source" tabindex="0" role="group" aria-label="Brownie magnifier. Use arrow keys to move the crop.">
+            <img src="assets/chocolate-brownies.jpg" alt="Brownies with crackly tops beside a jug and a plate.">
+            <span class="crop-marker" aria-hidden="true"></span>
+          </div>
+          <img id="brownie-detail" src="assets/chocolate-brownies.jpg" alt="Magnified detail of the selected area of the brownie photo.">
+        </div>
+        <section class="code-example" aria-label="Magnifier CSS">
+          <div class="code-toolbar"><h2>CSS · Cursor magnification</h2><button class="copy-code" type="button" aria-label="Copy magnifier CSS">Copy</button></div>
+          <pre><code id="magnifier-css">object-view-box: inset(30% 30% 30% 30%);</code></pre>
+        </section>
+      </section>
+
+      <section class="effect-section" aria-labelledby="focus-title">
+        <h2 id="focus-title"><span class="section-number">04 / One photo, many favorites</span>Pick your favorite</h2>
+        <p>Hover over or tap a cookie name to glide to its spot in the same photo.</p>
+        <div class="focus-layout">
+          <img id="cookie-focus" src="assets/holiday-cookies.jpg" alt="An assortment of jam-heart cookies, chocolate-drizzled stars, and jam-filled Christmas trees.">
+          <div class="focus-sidebar">
+          <div class="focus-options" role="group" aria-label="Choose a cookie to focus on">
+            <button type="button" data-cookie-crop="0%" aria-pressed="true">The whole assortment</button>
+            <button type="button" data-cookie-crop="18% 46% 42% 14%" aria-pressed="false">Jam hearts</button>
+            <button type="button" data-cookie-crop="30% 28% 30% 32%" aria-pressed="false">Chocolate-drizzled stars</button>
+            <button type="button" data-cookie-crop="42% 8% 18% 52%" aria-pressed="false">Jam-filled trees</button>
+          </div>
+        <section class="code-example" aria-label="Focus hopping CSS">
+          <div class="code-toolbar"><h2>CSS · Focus hopping</h2><button class="copy-code" type="button" aria-label="Copy focus hopping CSS">Copy</button></div>
+          <pre><code id="focus-css">object-view-box: inset(0%);
+transition: object-view-box 700ms ease-in-out;</code></pre>
+        </section>
+          </div>
+        </div>
+      </section>
+      <footer class="page-footer"><span>Alice’s Bakery</span><a href="https://github.com/tangalice/object-view-box-demo" target="_blank" rel="noopener noreferrer">View on GitHub ↗</a></footer>
+    </main>
+    <script>
+      document.querySelectorAll('.copy-code').forEach((button) => {
+        button.addEventListener('click', async () => {
+          const code = button.closest('.code-example').querySelector('code').textContent;
+          try {
+            await navigator.clipboard.writeText(code);
+            button.textContent = 'Copied!';
+          } catch {
+            const field = document.createElement('textarea');
+            field.value = code;
+            field.style.position = 'fixed';
+            field.style.opacity = '0';
+            document.body.append(field);
+            field.select();
+            button.textContent = document.execCommand('copy') ? 'Copied!' : 'Copy failed';
+            field.remove();
+            button.focus();
+          }
+          setTimeout(() => { button.textContent = 'Copy'; }, 1800);
+        });
+      });
+
+      const cake = document.getElementById('cake-preview');
+      const cropSlider = document.getElementById('crop-size');
+      const cropValue = document.getElementById('crop-value');
+      const cakeInput = document.getElementById('cake-crop-input');
+      const cakeError = document.getElementById('cake-edit-error');
+      const cropPresets = document.querySelectorAll('[data-fraction]');
+
+      function updateCakeCrop(fraction, syncSlider = true) {
+        const inset = Number(((100 - fraction) / 2).toFixed(3));
+        cake.style.objectViewBox = `inset(${inset}%)`;
+        cropSlider.disabled = false;
+        cropSlider.classList.remove('is-custom');
+        if (syncSlider) cropSlider.value = fraction;
+        cropValue.value = `${Number(fraction.toFixed(1))}%`;
+        cakeInput.textContent = `inset(${inset}%)`;
+        cakeInput.setAttribute('aria-invalid', 'false');
+        cakeError.textContent = '';
+        cropPresets.forEach((button) => {
+          button.setAttribute('aria-pressed', String(Math.abs(Number(button.dataset.fraction) - fraction) < 0.01));
+        });
+      }
+      cropPresets.forEach((button) => {
+        button.addEventListener('click', () => updateCakeCrop(Number(button.dataset.fraction)));
+      });
+      cropSlider.addEventListener('input', () => updateCakeCrop(Number(cropSlider.value), false));
+      cakeInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') { event.preventDefault(); cakeInput.blur(); }
+      });
+      cakeInput.addEventListener('input', () => {
+        const value = cakeInput.textContent.trim();
+        const valid = /^inset\([^;{}]*\)$/.test(value) && CSS.supports('object-view-box', value);
+        cakeInput.setAttribute('aria-invalid', String(!valid));
+        cakeError.textContent = valid ? '' : 'Enter a valid inset value. The last valid crop is still shown.';
+        if (!valid) return;
+        cake.style.objectViewBox = value;
+        cropPresets.forEach((button) => button.setAttribute('aria-pressed', 'false'));
+        cropValue.value = 'Custom';
+        // A single slider can represent only equal insets on all four sides.
+        // Parse the browser's normalized value to include equivalent shorthand.
+        const normalized = getComputedStyle(cake).getPropertyValue('object-view-box').trim();
+        const match = normalized.match(/^inset\(([^()]+)\)$/);
+        const tokens = match ? match[1].trim().split(/\s+/) : [];
+        const percentages = tokens.map((token) => {
+          if (token === '0px' || token === '0') return 0;
+          return /^[+-]?(?:\d*\.)?\d+%$/.test(token) ? Number(token.slice(0, -1)) : NaN;
+        });
+        const equalInsets = percentages.length >= 1 && percentages.length <= 4 &&
+          percentages.every((number) => Number.isFinite(number) && Math.abs(number - percentages[0]) < 0.00001);
+        const fraction = equalInsets ? 100 - 2 * percentages[0] : NaN;
+        const representable = Number.isFinite(fraction) && fraction >= 1 && fraction <= 100;
+        cropSlider.disabled = false;
+        cropSlider.classList.toggle('is-custom', !representable);
+        if (representable) {
+          cropSlider.value = fraction;
+          cropValue.value = `${Number(fraction.toFixed(1))}%`;
+          cropPresets.forEach((button) => button.setAttribute('aria-pressed', String(Math.abs(Number(button.dataset.fraction) - fraction) < 0.01)));
+        }
+      });
+
+      const video = document.getElementById('video-preview');
+      const videoSlider = document.getElementById('video-crop');
+      const videoZoom = document.getElementById('video-zoom');
+      const videoCode = document.getElementById('video-css');
+      const videoPresets = document.querySelectorAll('[data-video-inset]');
+
+      function updateVideoCrop(inset) {
+        video.style.objectViewBox = `inset(${inset}%)`;
+        videoSlider.value = inset;
+        videoZoom.value = `${Number((100 / (100 - 2 * inset)).toFixed(2))}×`;
+        videoCode.textContent = `object-view-box: inset(${inset}%);`;
+        videoPresets.forEach((button) => {
+          button.setAttribute('aria-pressed', String(Math.abs(Number(button.dataset.videoInset) - inset) < 0.01));
+        });
+      }
+      videoPresets.forEach((button) => {
+        button.addEventListener('click', () => updateVideoCrop(Number(button.dataset.videoInset)));
+      });
+      videoSlider.addEventListener('input', () => updateVideoCrop(Number(videoSlider.value)));
+
+      const brownieSource = document.querySelector('.magnifier-source');
+      const brownieDetail = document.getElementById('brownie-detail');
+      const cropMarker = document.querySelector('.crop-marker');
+      let brownieX = 50;
+      let brownieY = 50;
+      function magnifyBrownie(x, y) {
+        brownieX = Math.max(20, Math.min(80, x));
+        brownieY = Math.max(20, Math.min(80, y));
+        const left = Number((brownieX - 20).toFixed(2));
+        const top = Number((brownieY - 20).toFixed(2));
+        const crop = `${top}% ${Number((60 - left).toFixed(2))}% ${Number((60 - top).toFixed(2))}% ${left}%`;
+        brownieDetail.style.objectViewBox = `inset(${crop})`;
+        cropMarker.style.left = `${left}%`;
+        cropMarker.style.top = `${top}%`;
+        document.getElementById('magnifier-css').textContent = `object-view-box: inset(${crop});`;
+      }
+      function trackBrownie(event) {
+        const bounds = brownieSource.getBoundingClientRect();
+        magnifyBrownie((event.clientX - bounds.left) / bounds.width * 100,
+          (event.clientY - bounds.top) / bounds.height * 100);
+      }
+      brownieSource.addEventListener('pointermove', trackBrownie);
+      brownieSource.addEventListener('pointerdown', (event) => {
+        brownieSource.setPointerCapture(event.pointerId);
+        trackBrownie(event);
+      });
+      brownieSource.addEventListener('keydown', (event) => {
+        const directions = { ArrowLeft: [-3, 0], ArrowRight: [3, 0], ArrowUp: [0, -3], ArrowDown: [0, 3] };
+        const direction = directions[event.key];
+        if (!direction) return;
+        event.preventDefault();
+        magnifyBrownie(brownieX + direction[0], brownieY + direction[1]);
+      });
+
+      const cookieImage = document.getElementById('cookie-focus');
+      const cookieOptions = document.querySelectorAll('[data-cookie-crop]');
+      function focusCookie(button) {
+        const crop = button.dataset.cookieCrop;
+        cookieImage.style.objectViewBox = `inset(${crop})`;
+        cookieOptions.forEach((option) => option.setAttribute('aria-pressed', String(option === button)));
+        document.getElementById('focus-css').textContent = `object-view-box: inset(${crop});\ntransition: object-view-box 700ms ease-in-out;`;
+      }
+      cookieOptions.forEach((button) => {
+        ['pointerenter', 'focus', 'click'].forEach((event) => button.addEventListener(event, () => focusCookie(button)));
+      });
+
+      const image = document.getElementById('baking-banner');
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      // Only switch the endpoint; CSS handles the entire interpolation.
+      function startBanner() {
+        if (reducedMotion.matches) return;
+        setTimeout(() => {
+          image.classList.add('at-right');
+          setInterval(() => image.classList.toggle('at-right'), 8000);
+        }, 100);
+      }
+
+      if (image.complete && image.naturalWidth > 0) startBanner();
+      else image.onload = startBanner;
+    </script>
+  </body>
+</html>

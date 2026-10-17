@@ -6,4 +6,4 @@ Open `index.html` in a browser that supports `object-view-box` to try the demos.
 
 ## Internship presentation
 
-I put together and gave this [presentation](InternPresentation.key) about halfway through my internship. Some implementation details have changed since then, especially how video support works, so those parts are out of date.
+I put together and gave this [presentation](InternPresentation.key) about halfway through my internship. Some implementation details have changed since then, especially how video support works. It also includes next steps from that point in the internship, so both those plans and some technical details are out of date.
